@@ -28,6 +28,11 @@ var argv = require('optimist')
             + "Example: --alias 'jquery:jquery-browserify'"
         ,
     })
+    .option('namespace', {
+        alias : 'n',
+        desc : 'Name of variable to attach exports of a module to: '
+            + '"name:module"'
+    })
     .option('plugin', {
         alias : 'p',
         desc : 'Use a plugin. Use a colon separator to specify additional '
@@ -92,4 +97,12 @@ var bundle = browserify();
     bundle.addEntry(entry);
 });
 
-fs.writeFileSync(argv.outfile, bundle.bundle());
+var source = bundle.bundle();
+
+if (argv.namespace) {
+   var names = argv.namespace.split(":");
+   source = 'var ' + names[0] + ' = (function() {'
+     + source +  ' return require("' + names[1] + '")})();'
+}
+
+fs.writeFileSync(argv.outfile, source);
